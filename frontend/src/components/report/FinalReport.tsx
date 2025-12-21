@@ -1,0 +1,155 @@
+import { DiagnosticState } from '../../services/types'
+import TreatmentPlan from '../treatment/TreatmentPlan'
+import TestResults from '../tests/TestResults'
+
+interface FinalReportProps {
+  state: DiagnosticState
+  onDownload?: () => void
+}
+
+const FinalReport: React.FC<FinalReportProps> = ({ state, onDownload }) => {
+  const generatePDF = () => {
+    // Simple PDF generation using browser print
+    window.print()
+  }
+
+  const downloadReport = () => {
+    if (onDownload) {
+      onDownload()
+    } else {
+      generatePDF()
+    }
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <div className="card mb-6">
+        {/* Report Header */}
+        <div className="border-b border-gray-200 pb-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Medical Report</h1>
+              <p className="text-gray-600">
+                Generated on {new Date().toLocaleDateString()} at{' '}
+                {new Date().toLocaleTimeString()}
+              </p>
+            </div>
+            <button onClick={downloadReport} className="btn-primary">
+              <svg
+                className="w-5 h-5 mr-2 inline"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              Download PDF
+            </button>
+          </div>
+        </div>
+
+        {/* Patient Information */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Patient Information</h2>
+          <div className="grid md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
+            {state.patient_name && (
+              <div>
+                <span className="text-sm font-medium text-gray-600">Name:</span>
+                <p className="text-gray-900">{state.patient_name}</p>
+              </div>
+            )}
+            {state.patient_age && (
+              <div>
+                <span className="text-sm font-medium text-gray-600">Age:</span>
+                <p className="text-gray-900">{state.patient_age} years</p>
+              </div>
+            )}
+            {state.patient_gender && (
+              <div>
+                <span className="text-sm font-medium text-gray-600">Gender:</span>
+                <p className="text-gray-900 capitalize">{state.patient_gender}</p>
+              </div>
+            )}
+            {state.patient_weight && (
+              <div>
+                <span className="text-sm font-medium text-gray-600">Weight:</span>
+                <p className="text-gray-900">{state.patient_weight} kg</p>
+              </div>
+            )}
+            {state.symptoms && (
+              <div className="md:col-span-2">
+                <span className="text-sm font-medium text-gray-600">Symptoms:</span>
+                <p className="text-gray-900">{state.symptoms}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Test Results */}
+        <TestResults state={state} />
+
+        {/* Diagnosis & Treatment */}
+        <TreatmentPlan state={state} />
+
+        {/* Calculated Dosages (Detailed) */}
+        {state.calculated_dosages && Object.keys(state.calculated_dosages).length > 0 && (
+          <div className="card mb-6 bg-yellow-50 border-l-4 border-l-yellow-400">
+            <h2 className="text-xl font-bold text-gray-900 mb-3">Medication Dosages</h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              {Object.entries(state.calculated_dosages).map(([medication, dosage]: [string, any]) => (
+                <div key={medication} className="bg-white p-3 rounded border border-yellow-200">
+                  <h3 className="font-semibold text-gray-900 border-b pb-1 mb-2 capitalize">{medication}</h3>
+                  <div className="space-y-1 text-sm">
+                    {dosage.dose && <p><span className="text-gray-600">Dose:</span> <span className="font-medium">{dosage.dose}</span></p>}
+                    {dosage.frequency && <p><span className="text-gray-600">Frequency:</span> <span className="font-medium">{dosage.frequency}</span></p>}
+                    {dosage.duration && <p><span className="text-gray-600">Duration:</span> <span className="font-medium">{dosage.duration}</span></p>}
+                    {dosage.notes && <p className="mt-2 text-xs text-gray-500 italic">{dosage.notes}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Progress Summary (if returning patient) */}
+        {state.progress_summary && (
+          <div className="card border-l-4 border-l-blue-500 mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-3">Progress Summary</h2>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-gray-800 whitespace-pre-wrap">{state.progress_summary}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Doctor Note */}
+        {state.doctor_note && (
+          <div className="card mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-3">Clinical Notes</h2>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <p className="text-gray-800 whitespace-pre-wrap">{state.doctor_note}</p>
+            </div>
+          </div>
+        )}
+
+        {/* AI Disclaimer */}
+        <div className="mt-8 p-4 bg-gray-100 border border-gray-300 rounded-lg text-sm text-gray-700 italic">
+          <p><strong>Disclaimer:</strong> This report is generated by an Artificial Intelligence system for assistance purposes only. It is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.</p>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center text-sm text-gray-500 border-t border-gray-200 pt-4">
+          <p>This report was generated by PulmoAI - Doctor Assistant System</p>
+          <p className="mt-1">For medical emergencies, please contact emergency services immediately.</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default FinalReport
+
